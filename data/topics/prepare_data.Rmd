@@ -1,0 +1,33 @@
+---
+title: "What Parliament Votes On"
+output: html_document
+---
+
+```{r}
+library(textstem)
+library(tokenizers)
+library(stopwords)
+```
+
+```{r Load Data}
+vc <- read.csv('vote_collections.csv')
+```
+
+```{r Tokenize & Lemmatize}
+vc$tokenized_title <- tokenize_words(vc$title, stopwords = stopwords())
+
+# Remove digit-only tokens
+vc$tokenized_title <- lapply(tokenized_titles, function(tokens) tokens[!grepl('^[0-9]+$', tokens)])
+
+# Remove roman numerals i-iii
+vc$tokenized_title <- lapply(tokenized_titles, function(tokens) tokens[!grepl('^[i]+$', tokens)])
+
+# Lemmatize
+vc$lemmatized_title <- lemmatize_words(tokenized_titles)
+```
+
+```{r Count}
+common_words <- table(unlist(vc$lemmatized_title))
+common_words <- as.data.frame(sort(common_words, decreasing = TRUE))
+common_words <- common_words[1:50,]
+````
