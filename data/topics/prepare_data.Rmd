@@ -7,6 +7,7 @@ output: html_document
 library(textstem)
 library(tokenizers)
 library(stopwords)
+library(ngram)
 ```
 
 ```{r Load Data}
@@ -14,20 +15,42 @@ vc <- read.csv('vote_collections.csv')
 ```
 
 ```{r Tokenize & Lemmatize}
-vc$tokenized_title <- tokenize_words(vc$title, stopwords = stopwords())
+remove_pattern <- '\\b(eu|european union)\\b'
+vc$tokenized_title <- gsub(remove_pattern, '', tolower(vc$title))
+vc$tokenized_title <- tokenize_words(vc$tokenized_title, stopwords = stopwords('en'))
 
 # Remove digit-only tokens
-vc$tokenized_title <- lapply(tokenized_titles, function(tokens) tokens[!grepl('^[0-9]+$', tokens)])
+vc$tokenized_title <- lapply(vc$tokenized_title, function(tokens) tokens[!grepl('^[0-9]+$', tokens)])
 
 # Remove roman numerals i-iii
-vc$tokenized_title <- lapply(tokenized_titles, function(tokens) tokens[!grepl('^[i]+$', tokens)])
+vc$tokenized_title <- lapply(vc$tokenized_title, function(tokens) tokens[!grepl('^[i]+$', tokens)])
 
 # Lemmatize
-vc$lemmatized_title <- lemmatize_words(tokenized_titles)
-```
+vc$lemmatized_title <- lemmatize_words(vc$tokenized_title)
 
-```{r Count}
 common_words <- table(unlist(vc$lemmatized_title))
 common_words <- as.data.frame(sort(common_words, decreasing = TRUE))
-common_words <- common_words[1:50,]
-````
+common_words <- common_words[1:25,]
+
+barplot(common_words$Freq, names.arg = common_words$Var1, horiz = TRUE, las = 2)
+```
+
+```{r 2-grams}
+vc$title_2grams <- lapply(vc$lemmatized_title, function(title) get.ngrams(ngram(concatenate(title), n = 2)))
+
+common_2grams <-table(unlist(vc$title_2grams))
+common_2grams <- as.data.frame(sort(common_2grams, decreasing = TRUE))
+common_2grams <- common_2grams[1:25,]
+
+barplot(common_2grams$Freq, names.arg = common_2grams$Var1, horiz = TRUE, las = 2)
+```
+
+```{r 3-grams}
+vc$title_3grams <- lapply(vc$lemmatized_title, function(title) get.ngrams(ngram(concatenate(title), n = min(3, length(title)))))
+
+common_3grams <-table(unlist(vc$title_3grams))
+common_3grams <- as.data.frame(sort(common_3grams, decreasing = TRUE))
+common_3grams <- common_3grams[1:25,]
+
+barplot(common_3grams$Freq, names.arg = common_3grams$Var1, horiz = TRUE, las = 2)
+```
