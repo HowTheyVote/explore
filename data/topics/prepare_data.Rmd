@@ -59,3 +59,16 @@ ggplot(common_skipbigrams, aes(x = reorder(skipbigram, n), y = n)) +
   geom_bar(stat = 'identity') +
   coord_flip()
 ```
+
+```{r Common Words by Month}
+words <- c('discharge', 'covid', 'human', 'budget', 'right', 'law', 'digital')
+
+vc %>%
+  unnest_tokens(word, title, stopwords = stopwords('en')) %>%
+  filter(word %in% words) %>%
+  group_by(month) %>%
+  count(word, sort = TRUE) %>%
+  ggplot(aes(x = month, y = n, group = word, color = word)) +
+    geom_line() +
+    geom_point()
+```
