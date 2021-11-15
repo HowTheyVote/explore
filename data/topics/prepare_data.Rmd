@@ -20,16 +20,16 @@ vc <- read.csv('vote_collections.csv')
 remove_pattern <- '\\b(eu|european union|[0-9]+|i+)\\b'
 
 vc <- vc %>%
-  select(title, date) %>%
-  mutate(title = tolower(title)) %>%
-  mutate(title = gsub(remove_pattern, '', title)) %>%
-  mutate(title = lemmatize_strings(title)) %>%
+  select(!!as.name(column), date) %>%
+  mutate(!!column := tolower(!!as.name(column))) %>%
+  mutate(!!column := gsub(remove_pattern, '', !!as.name(column))) %>%
+  mutate(!!column := lemmatize_strings(!!as.name(column))) %>%
   mutate(month = format(as.Date(date), '%Y-%m'))
 ```
 
 ```{r Common Words}
 common_words <- vc %>%
-  unnest_tokens(word, title, stopwords=stopwords('en')) %>%
+  unnest_tokens(word, !!as.name(column), stopwords=stopwords('en')) %>%
   count(word, sort = TRUE) %>%
   top_n(25)
 
@@ -40,7 +40,7 @@ ggplot(common_words, aes(x = reorder(word, n), y = n)) +
 
 ```{r Common Bi-Grams}
 common_bigrams <- vc %>%
-  unnest_tokens(bigram, title, token = 'ngrams', n = 2, stopwords = stopwords('en')) %>%
+  unnest_tokens(bigram, !!as.name(column), token = 'ngrams', n = 2, stopwords = stopwords('en')) %>%
   count(bigram, sort = TRUE) %>%
   top_n(25)
 
@@ -51,7 +51,7 @@ ggplot(common_bigrams, aes(x = reorder(bigram, n), y = n)) +
 
 ```{r Common Skipgrams}
 common_skipbigrams <- vc %>%
-  unnest_tokens(skipbigram, title, token = 'skip_ngrams', n = 2, k = 1, stopwords = stopwords('en')) %>%
+  unnest_tokens(skipbigram, !!as.name(column), token = 'skip_ngrams', n = 2, k = 1, stopwords = stopwords('en')) %>%
   count(skipbigram, sort = TRUE) %>%
   top_n(25)
 
@@ -64,7 +64,7 @@ ggplot(common_skipbigrams, aes(x = reorder(skipbigram, n), y = n)) +
 words <- c('discharge', 'covid', 'human', 'budget', 'right', 'law', 'digital')
 
 vc %>%
-  unnest_tokens(word, title, stopwords = stopwords('en')) %>%
+  unnest_tokens(word, !!as.name(column), stopwords = stopwords('en')) %>%
   filter(word %in% words) %>%
   group_by(month) %>%
   count(word, sort = TRUE) %>%
