@@ -17,7 +17,8 @@ vc <- read.csv('vote_collections.csv')
 ```
 
 ```{r Tokenize & Lemmatize}
-remove_pattern <- '\\b(eu|european union|[0-9]+|i+)\\b'
+remove_pattern <- '\\b(eu|european union|member|european parliament|parliament|[0-9]+|i+)\\b'
+column <- 'title'
 
 vc <- vc %>%
   select(!!as.name(column), date) %>%
